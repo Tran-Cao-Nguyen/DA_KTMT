@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 const SALT_ROUNDS = 10;
 
@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema({
     },
     dateOfBirth: {
         type: Date, // Ngày sinh
+    },
+    gender: {
+        type: String,
+        enum: ["male", "female", "other"],
+        default: "other"
     },
     group: {
         type: Number,
@@ -106,12 +111,31 @@ userSchema.pre('save', async function (next) {
         }
 
         // Lấy bản ghi mới nhất trong records (nếu có)
-        const latestRecord = user.records
+        let latestRecord = user.records
             ?.sort((a, b) => new Date(b.date) - new Date(a.date))[0] || null;
 
-        // Nếu không có bản ghi nào, tiếp tục
+        // Nếu không có bản ghi nào, khởi tạo bản ghi mới
         if (!latestRecord) {
-            return next();
+            user.records = [
+                {
+                    date: today,
+                    height: null,
+                    weight: null,
+                    age: null,
+                    bmi: null,
+                    bmr: null,
+                    tdee: null,
+                    lbm: null,
+                    fatPercentage: null,
+                    waterPercentage: null,
+                    boneMass: null,
+                    muscleMass: null,
+                    proteinPercentage: null,
+                    visceralFat: null,
+                    idealWeight: null,
+                },
+            ];
+            latestRecord = user.records[0];
         }
 
         // Dữ liệu từ latestRecord (cập nhật từ bản ghi mới nhất)
@@ -181,24 +205,21 @@ userSchema.pre('save', async function (next) {
             : null;
 
         // Thêm bản ghi mới vào records
-        user.records.push({
-            date: today,
-            height: heightValue,
-            weight: weightValue,
-            group: groupValue,
-            age,
-            bmi,
-            bmr,
-            tdee,
-            lbm,
-            fatPercentage,
-            waterPercentage,
-            boneMass,
-            muscleMass,
-            proteinPercentage,
-            visceralFat,
-            idealWeight,
-        });
+        latestRecord.date = today;
+        latestRecord.height = heightValue;
+        latestRecord.weight = weightValue;
+        latestRecord.age = age;
+        latestRecord.bmi = bmi;
+        latestRecord.bmr = bmr;
+        latestRecord.tdee = tdee;
+        latestRecord.lbm = lbm;
+        latestRecord.fatPercentage = fatPercentage;
+        latestRecord.waterPercentage = waterPercentage;
+        latestRecord.boneMass = boneMass;
+        latestRecord.muscleMass = muscleMass;
+        latestRecord.proteinPercentage = proteinPercentage;
+        latestRecord.visceralFat = visceralFat;
+        latestRecord.idealWeight = idealWeight;
 
         next();
     } catch (error) {

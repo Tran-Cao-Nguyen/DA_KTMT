@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import users from "./routes/users.js";
 import auth from "./routes/auth.js";
+import os from "os";
 dotenv.config();
 
 const port = process.env.PORT || 8000;
@@ -20,7 +21,12 @@ app.use(
 
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  const networkInterfaces = os.networkInterfaces();
+  const ip = Object.values(networkInterfaces)
+    .flat()
+    .find((details) => details.family === 'IPv4' && !details.internal)?.address;
+
+  console.log(`Server is running on: http://${ip || 'localhost'}:${port}${api_url}`);
 });
 // mongodb+srv://admin:admin123@cluster0.h40dz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 //Connect to mongo db

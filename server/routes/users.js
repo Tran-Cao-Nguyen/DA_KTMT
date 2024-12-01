@@ -7,27 +7,50 @@ const router = express.Router();
 
 //post api
 
-router.post(`/`, async (req, res) => {
-    console.log("Result", req.body);
-  
-    let data = User(req.body);
-    try {
-      let dataToStore = await data.save();
-      res.status(200).json(dataToStore);
-    } catch (error) {
-      res.status(400).json({
-        status: error.message,
+router.put(`/update`, protect, async (req, res) => {
+  const { fullName, dateOfBirth,gender, height, weight } = req.body;
+    
+  try {
+      const user = await User.findOne({id: req.user.id});
+      if(!user) {
+        return res.status(404).json({message: "user not found"});
+      }
+      
+      if(fullName) user.fullName = fullName;
+      if(dateOfBirth) user.dateOfBirth = dateOfBirth;
+      if(gender) user.gender = gender;
+      const latestRecord = user.records
+            ?.sort((a, b) => new Date(b.date) - new Date(a.date))[0] || null;
+      if(height || weight){
+        const newRecords = {
+          height: height ? height: latestRecord.height,
+          weight: weight ? weight: latestRecord.weight,
+        }
+        user.records.push(newRecords);
+      }
+      console.log("update user:");
+      console.log(user);
+      const updatedUser = await user.save();
+        res.status(200).json({
+            message: 'Cập nhật user thành công',
+            user: updatedUser,
       });
+
+    } catch(e){
+      res.status(500).json(e.message);
     }
   });
   
   // get api
   router.get(`/profile`, protect, async (req, res) => {
     try {
-      const user = await User.findOne({id: req.user.id});
+      let user = await User.findOne({id: req.user.id});
+
+
       if(!user) {
         return res.status(404).json({message: "user not found"});
       }
+      console.log(user);
       res.status(200).json(user);
     } catch (e) {
       res.status(500).json(e.message);

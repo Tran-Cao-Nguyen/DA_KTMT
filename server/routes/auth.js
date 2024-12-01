@@ -17,7 +17,6 @@ router.post(`/register`, async (req, res) => {
   
     try {
         let user = await User.findOne({username});
-
         if(user)
         {
             return res.status(400).json({ message: 'user already exists' });
@@ -25,7 +24,6 @@ router.post(`/register`, async (req, res) => {
         user = new User({username, password});
         await user.save();
 
-        
         res.status(200).json({ message: 'success'});
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -57,7 +55,7 @@ router.post(`/register`, async (req, res) => {
   });
   
   router.post('/logout', async (req, res) => {
-    res.status.json({message: 'logout successfully'});
+    res.status(200).json({message: 'logout successfully'});
   })
 
   export default router;
